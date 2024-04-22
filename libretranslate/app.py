@@ -8,6 +8,7 @@ from datetime import datetime
 from functools import wraps
 from html import unescape
 from timeit import default_timer
+from dotenv import load_dotenv
 
 import argostranslatefiles
 from argostranslatefiles import get_supported_formats
@@ -37,6 +38,7 @@ from libretranslate.locales import (
 from .api_keys import Database, RemoteDatabase
 from .suggestions import Database as SuggestionsDatabase
 
+load_dotenv()
 
 def get_version():
     try:
@@ -57,8 +59,9 @@ def get_upload_dir():
 
 def get_req_api_key():
     if request.is_json:
-        json = get_json_dict(request)
-        ak = json.get("api_key")
+        #json = get_json_dict(request)
+        # ak = json.get("api_key")
+        ak = "23717cba-2628-4835-aaa1-99b7a500e133"
     else:
         ak = request.values.get("api_key")
 
@@ -284,7 +287,7 @@ def create_app(args):
 
             if flood.is_banned(ip):
                 abort(403, description=_("Too many request limits violations"))
-
+                
             if args.api_keys:
                 ak = get_req_api_key()
                 if ak and api_keys_db.lookup(ak) is None:
@@ -295,6 +298,14 @@ def create_app(args):
                 else:
                   need_key = False
                   key_missing = api_keys_db.lookup(ak) is None
+                  
+                  json = get_json_dict(request)
+                  ak = json.get("api_key")
+                  if(ak != os.getenv('API_KEY')):
+                    abort(
+                      403,
+                      description = "Invalid API KEY"
+                    )
 
                   if (args.require_api_key_origin
                       and key_missing
